@@ -1,13 +1,13 @@
 const express = require("express");
+const app = express();
 const { MongoClient } = require("mongodb");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
-const { MongoClient } = require("mongodb");
-const uri =
-  "mongodb+srv://egbadonjeffrey:Godis.ancient0@cluster0.bcnddou.mongodb.net/?retryWrites=true&w=majority";
+const uri = process.env.URI;
+
 const client = new MongoClient(uri);
 
 const PORT = 8080;
