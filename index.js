@@ -46,9 +46,7 @@ app.post("/signup", async (req, res) => {
       expiresIn: 60 * 24,
     });
 
-    res
-      .status(201)
-      .json({ token, userId: generateUserId, email: sanitizedEmail });
+    res.status(201).json({ token, userId: generateUserId });
   } catch (error) {
     res.send(error);
   } finally {
@@ -76,7 +74,7 @@ app.post("/login", async (req, res) => {
         expiresIn: 60 * 24,
       });
 
-      res.status(201).json({ token, userId: user.user_id, email });
+      res.status(201).json({ token, userId: user.user_id });
     }
 
     res.status(400).send("Invalid Credentials");
@@ -84,6 +82,8 @@ app.post("/login", async (req, res) => {
     console.log(error);
   }
 });
+
+app.get("/user", async (req, res) => {});
 
 app.get("/users", async (req, res) => {
   try {
@@ -96,6 +96,40 @@ app.get("/users", async (req, res) => {
     res.send(returnedUsers);
   } catch (error) {
     res.send(error);
+  } finally {
+    await client.close();
+  }
+});
+
+app.put("/user", async (req, res) => {
+  const formData = req.body.formData;
+
+  try {
+    await client.connect();
+    const database = client.db("app-data");
+    const users = database.collection("users");
+
+    const query = { user_id: formData.user_id };
+
+    const updateDocument = {
+      $set: {
+        first_name: formData.first_name,
+        dob_day: formData.dob_day,
+        dob_month: formData.dob_month,
+        dob_year: formData.dob_year,
+        show_gender: formData.show_gender,
+        gender_identity: formData.gender_identity,
+        gender_interest: formData.gender_interest,
+        url: formData.url,
+        about: formData.about,
+        matches: formData.matches,
+      },
+    };
+
+    const insertedUser = await users.updateOne(query, updateDocument);
+    res.send(insertedUser);
+  } catch (error) {
+    console.log(error);
   } finally {
     await client.close();
   }
