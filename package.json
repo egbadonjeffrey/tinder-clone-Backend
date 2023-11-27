@@ -1,25 +1,16 @@
 {
   "name": "server",
-<<<<<<< HEAD
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-=======
   "description": "",
   "version": "1.0.0",
   "main": "index.js",
   "devDependencies": {},
->>>>>>> c07d22ee370d49150cd8c173cfc052f814706a83
   "scripts": {
     "start:backend": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-<<<<<<< HEAD
-=======
   "keywords": [],
   "author": "",
   "license": "ISC",
->>>>>>> c07d22ee370d49150cd8c173cfc052f814706a83
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
