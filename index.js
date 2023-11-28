@@ -63,7 +63,6 @@ app.post("/login", async (req, res) => {
     const users = database.collection("users");
     const user = await users.findOne({ email });
 
-    console.log(user.hashed_password);
     const correctPassword = await bcrypt.compare(
       password,
       user.hashed_password
@@ -83,19 +82,56 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/user", async (req, res) => {});
-
 app.get("/users", async (req, res) => {
+  const userIds = JSON.parse(req.query.userIds);
+  console.log("userIds ", userIds);
+
+  try {
+    await client.connect();
+
+    const database = client.db("app-data");
+    const users = database.collection("users");
+  } finally {
+    await client.close();
+  }
+});
+
+app.get("/gendered-users", async (req, res) => {
+  const gender = req.query.gender;
+
+  // console.log("gender", gender);
   try {
     await client.connect();
     const database = client.db("app-data");
 
     const users = database.collection("users");
+    const query = { gender_identity: { $eq: gender } };
 
-    const returnedUsers = await users.find().toArray();
-    res.send(returnedUsers);
+    const foundUsers = await users.find(query).toArray();
+
+    // console.log("foundUsers", foundUsers);
+
+    res.send(foundUsers);
   } catch (error) {
     res.send(error);
+  } finally {
+    await client.close();
+  }
+});
+
+app.get("/user", async (req, res) => {
+  await client.connect();
+  const UserId = req.query.userId;
+
+  try {
+    const database = client.db("app-data");
+    const users = database.collection("users");
+    const query = { user_id: UserId };
+
+    const user = await users.findOne(query);
+    res.send(user);
+  } catch (error) {
+    console.log(error);
   } finally {
     await client.close();
   }
@@ -128,6 +164,37 @@ app.put("/user", async (req, res) => {
 
     const insertedUser = await users.updateOne(query, updateDocument);
     res.send(insertedUser);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    await client.close();
+  }
+});
+
+app.put("/addmatch", async (req, res) => {
+  const { userId, matchedUserId } = req.body;
+
+  // console.log("userId", userId);
+  // console.log("matchedUserId", matchedUserId);
+
+  try {
+    await client.connect();
+    const database = client.db("app-data");
+    const users = database.collection("users");
+
+    const query = { user_id: userId };
+    const updateDocument = {
+      $push: {
+        matches: {
+          user_id: { matchedUserId },
+        },
+      },
+    };
+
+    const user = await users.updateOne(query, updateDocument);
+
+    // console.log(user);
+    res.send(user);
   } catch (error) {
     console.log(error);
   } finally {
