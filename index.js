@@ -83,14 +83,28 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/users", async (req, res) => {
-  const userIds = JSON.parse(req.query.userIds);
-  console.log("userIds ", userIds);
+  const userIds = JSON.parse(req.query.userIds).map((obj) => obj.matchedUserId);
 
   try {
     await client.connect();
 
     const database = client.db("app-data");
     const users = database.collection("users");
+
+    const pipeline = [
+      {
+        $match: {
+          user_id: {
+            $in: userIds,
+          },
+        },
+      },
+    ];
+
+    const foundUsers = await users.aggregate(pipeline).toArray();
+    res.send(foundUsers);
+  } catch (error) {
+    console.log("server", error);
   } finally {
     await client.close();
   }
@@ -108,8 +122,6 @@ app.get("/gendered-users", async (req, res) => {
     const query = { gender_identity: { $eq: gender } };
 
     const foundUsers = await users.find(query).toArray();
-
-    // console.log("foundUsers", foundUsers);
 
     res.send(foundUsers);
   } catch (error) {
@@ -174,9 +186,6 @@ app.put("/user", async (req, res) => {
 app.put("/addmatch", async (req, res) => {
   const { userId, matchedUserId } = req.body;
 
-  // console.log("userId", userId);
-  // console.log("matchedUserId", matchedUserId);
-
   try {
     await client.connect();
     const database = client.db("app-data");
@@ -193,8 +202,47 @@ app.put("/addmatch", async (req, res) => {
 
     const user = await users.updateOne(query, updateDocument);
 
-    // console.log(user);
     res.send(user);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    await client.close();
+  }
+});
+
+app.get("/messages", async (req, res) => {
+  const { userId, correspondingUserId } = req.query;
+  try {
+    await client.connect();
+
+    const database = client.db("app-data");
+    const messages = database.collection("messages");
+
+    const query = {
+      from_userId: userId,
+      to_userId: correspondingUserId,
+    };
+
+    const foundMessages = await messages.find(query).toArray();
+    res.send(foundMessages);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    await client.close();
+  }
+});
+
+app.post("/message", async (req, res) => {
+  const message = req.body;
+
+  try {
+    await client.connect();
+
+    const database = client.db("app-data");
+    const messages = database.collection("messages");
+    const insertedMessage = await messages.insertOne(message);
+
+    res.send(insertedMessage);
   } catch (error) {
     console.log(error);
   } finally {
